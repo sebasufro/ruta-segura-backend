@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-// import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthService } from './auth.service.js';
+import { AuthController } from './auth.controller.js';
+import { User } from './entities/user.entity.js';
+import { UserAddress } from './entities/user-address.entity.js';
+import { EmergencyContact } from './entities/emergency-contact.entity.js';
 
 @Module({
-  // imports: [
-  //   JwtModule.register({
-  //     global: true,
-  //     secret: 'TU_SECRETO_AQUI',
-  //     signOptions: { expiresIn: '8h' },
-  //   }),
-  // ],
+  imports: [
+    // Esto le da acceso al AuthService a los repositorios de estas tablas
+    TypeOrmModule.forFeature([User, UserAddress, EmergencyContact]),
+  ],
   controllers: [AuthController],
   providers: [AuthService],
-  exports: [AuthService]
+  exports: [AuthService],
 })
 export class AuthModule {}
