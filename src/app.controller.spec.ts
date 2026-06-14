@@ -3,9 +3,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConflictException, BadRequestException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { AuthService } from './auth.service.js';
-import { User } from './entities/user.entity.js';
-import { CreateUserDto } from './dto/create-user.dto.js';
+import { AuthService } from './auth/auth.service.js';
+import { User } from './auth/entities/user.entity.js';
+import { CreateUserDto } from './auth/dto/create-user.dto.js';
 
 describe('AuthService - Validación de Atributos', () => {
   let service: AuthService;
