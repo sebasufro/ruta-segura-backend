@@ -1,0 +1,32 @@
+# Dockerfile to install dependencies and other needed files
+
+FROM postgres:17-alpine
+
+# LLVM
+RUN apk add --no-cache build-base postgresql-dev git \
+    && apk add --no-cache clang llvm \
+    \
+    && if [ -e /usr/bin/clang ]; then \
+        ln -s /usr/bin/clang /usr/bin/clang-19; \
+    fi \
+    \
+    && /bin/mkdir -p /usr/lib/llvm19/bin \
+    \
+    && if [ -e /usr/bin/llvm-lto ]; then \
+        ln -s /usr/bin/llvm-lto /usr/lib/llvm19/bin/llvm-lto; \
+    fi
+
+
+# PG vector
+RUN git clone --branch v0.7.0 https://github.com/pgvector/pgvector.git \
+    && cd pgvector \
+    && make USE_PG_CONFIG=/usr/local/bin/pg_config \
+    && make install USE_PG_CONFIG=/usr/local/bin/pg_config
+
+
+# Cleaning
+RUN apk del build-base postgresql-dev git clang llvm \
+    && rm -f /usr/bin/clang-19 \
+    && rm -f /usr/lib/llvm19/bin/llvm-lto \
+    && rm -rf /usr/lib/llvm19 \
+    && rm -rf /var/cache/apk/* /pgvector
