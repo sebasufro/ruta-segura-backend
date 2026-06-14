@@ -66,9 +66,12 @@ export class AuthService {
         },
       };
     } catch (error) {
-      if (error instanceof ConflictException) throw error;
-      throw new InternalServerErrorException('Error interno del servidor al procesar el registro.');
-    }
+      console.error('--- DETALLE DEL ERROR DE INFRAESTRUCTURA ---', error);
+  if (error instanceof ConflictException) {
+    throw error;
+  }
+  throw new InternalServerErrorException('Error interno del servidor al procesar el registro.');
+}
   }
 
   async authenticate(loginDto: LoginDto) {

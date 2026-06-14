@@ -1,53 +1,45 @@
-import { IsString, IsEmail, IsNotEmpty, IsOptional, ValidateNested } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, Length, Matches, IsEnum, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-
-class EmergencyContactDto {
-  @IsString()
-  @IsNotEmpty()
-  contact_name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  contact_number: string;
-}
+import { EmergencyContactDto } from './emergency-contact.dto.js';
 
 export class CreateUserDto {
-  @IsEmail()
-  email: string;
+  @IsString()
+  @IsNotEmpty({ message: 'El RUT es obligatorio' })
+  // Expresión regular corregida: soporta opcionalmente puntos, exige guion y admite dígito verificador 0-9 o K/k
+  @Matches(/^(\d{1,2}(\.\d{3}){2}-[\dkK]|\d{7,8}-[\dkK])$/, {
+    message: 'El formato del RUT no es válido (ejemplos válidos: 12.345.678-9 o 12345678-9)',
+  })
+  rut!: string;
+
+  @IsEmail({}, { message: 'El correo electrónico debe tener un formato válido' })
+  @IsNotEmpty({ message: 'El correo electrónico es obligatorio' })
+  email!: string;
 
   @IsString()
-  @IsNotEmpty()
-  password: string;
+  @IsNotEmpty({ message: 'La contraseña es obligatoria' })
+  @Length(6, 20, { message: 'La contraseña debe tener entre 6 y 20 caracteres' })
+  password!: string;
 
   @IsString()
-  @IsNotEmpty()
-  role: string;
+  @IsNotEmpty({ message: 'El nombre completo es obligatorio' })
+  full_name!: string;
 
   @IsString()
-  @IsNotEmpty()
-  full_name: string;
+  @IsNotEmpty({ message: 'El número de teléfono es obligatorio' })
+  @Matches(/^\+?[1-9]\d{1,14}$/, { message: 'El número de teléfono debe ser un formato válido' })
+  phone_number!: string;
 
   @IsString()
-  @IsNotEmpty()
-  rut: string;
+  @IsNotEmpty({ message: 'El rol es obligatorio' })
+  @IsEnum(['VOLUNTEER', 'SUPERVISOR', 'ADMIN'], { message: 'El rol debe ser VOLUNTEER, SUPERVISOR o ADMIN' })
+  role!: string;
 
   @IsString()
-  @IsNotEmpty()
-  phone_number: string;
+  @IsNotEmpty({ message: 'La dirección es obligatoria' })
+  address!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  address: string;
-
-  @ValidateNested()
-  @Type(() => EmergencyContactDto)
-  emergency_contact: EmergencyContactDto;
-
-  @IsOptional()
-  @IsString()
-  organization?: string;
-
-  @IsOptional()
-  @IsString()
-  id_legal_person?: string;
+  @IsNotEmpty({ message: 'El objeto de contacto de emergencia es requerido' })
+  @ValidateNested() // Activa la validación interna del objeto secundario
+  @Type(() => EmergencyContactDto) // Mapea el JSON interno a la clase del DTO secundario
+  emergency_contact!: EmergencyContactDto;
 }

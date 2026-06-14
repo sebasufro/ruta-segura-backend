@@ -4,16 +4,16 @@ import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'root',
-      password: 'rut453gur4!',
-      database: 'rutaSegura',
-      autoLoadEntities: true, // Carga automáticamente las entidades registradas en los submódulos
-      synchronize: false, // Es una buena práctica mantenerlo en 'false' si ya creaste tus tablas manualmente con tu script SQL
-    }),
+  TypeOrmModule.forRoot({
+  type: 'postgres',
+  host: 'localhost',
+  port: 5433,                         
+  username: 'user_admin',             
+  password: 'password_123',         
+  database: 'rutasegura_db',          
+  autoLoadEntities: true,
+ synchronize: true, // <-- CAMBIA A TRUE TEMPORALMENTE
+}),
     AuthModule,
   ],
   controllers: [],
