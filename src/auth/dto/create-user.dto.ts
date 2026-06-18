@@ -1,7 +1,7 @@
 import { IsEmail, IsString, IsNotEmpty, Length, Matches, IsEnum, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EmergencyContactDto } from './emergency-contact.dto.js';
-
+import { Role } from 'src/shared/enums/roles.enum.js';
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty({ message: 'El RUT es obligatorio' })
@@ -31,9 +31,8 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty({ message: 'El rol es obligatorio' })
-  @IsEnum(['VOLUNTEER', 'SUPERVISOR', 'ADMIN'], { message: 'El rol debe ser VOLUNTEER, SUPERVISOR o ADMIN' })
-  role!: string;
-
+  @IsEnum(Role)
+role!: Role;
   @IsString()
   @IsNotEmpty({ message: 'La dirección es obligatoria' })
   address!: string;
