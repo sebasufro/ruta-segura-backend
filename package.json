@@ -22,6 +22,7 @@
   "dependencies": {
     "@nestjs/common": "^11.1.26",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/mapped-types": "^2.1.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.1",
     "bcryptjs": "^3.0.3",
@@ -58,7 +59,7 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
-"jest": {
+  "jest": {
     "moduleFileExtensions": [
       "js",
       "json",
@@ -79,4 +80,3 @@
     }
   }
 }
-
