@@ -1,0 +1,121 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model emergency_contacts {
+  id_contact     String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_user        String @db.Uuid
+  contact_name   String @db.VarChar(100)
+  contact_number String @db.VarChar(20)
+  users          users  @relation(fields: [id_user], references: [id_user], onDelete: Cascade, onUpdate: NoAction, map: "fk_contact_user")
+}
+
+model location_updates {
+  id_location String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_user     String   @db.Uuid
+  id_route    String   @db.Uuid
+  latitude    Decimal  @db.Decimal(10, 8)
+  longitude   Decimal  @db.Decimal(11, 8)
+  sos_active  Int      @default(0) @db.SmallInt
+  timestamp   DateTime @default(now()) @db.Timestamp(6)
+  route       route    @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_location_route")
+  users       users    @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_location_user")
+
+  @@index([id_route], map: "idx_location_route")
+  @@index([id_user], map: "idx_location_user")
+}
+
+model organization {
+  id_organization        String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                   String                   @db.VarChar(100)
+  id_legal_person        String?                  @db.VarChar(20)
+  organization_documents organization_documents[]
+  users                  users[]
+}
+
+model organization_documents {
+  id_document        String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_organization    String       @db.Uuid
+  file_name          String       @db.VarChar(100)
+  content_base64     String?
+  document_status    String?      @db.VarChar(30)
+  verification_notes String?
+  approval_date      DateTime?    @db.Date
+  organization       organization @relation(fields: [id_organization], references: [id_organization], onDelete: NoAction, onUpdate: NoAction, map: "fk_orgdoc_organization")
+
+  @@index([id_organization], map: "idx_orgdoc_organization")
+}
+
+model route {
+  id_route           String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_supervisor      String?            @db.Uuid
+  route_name         String             @db.VarChar(100)
+  description        String?
+  starting_datetime  DateTime?          @db.Timestamp(6)
+  ending_datetime    DateTime?          @db.Timestamp(6)
+  min_volunteers     Int?
+  max_capacity       Int?
+  starting_latitude  Decimal?           @db.Decimal(10, 8)
+  starting_longitude Decimal?           @db.Decimal(11, 8)
+  ending_latitude    Decimal?           @db.Decimal(10, 8)
+  ending_longitude   Decimal?           @db.Decimal(11, 8)
+  transport_type     String?            @db.VarChar(50)
+  distance_meters    Decimal?           @db.Decimal(10, 2)
+  base_points        Json?
+  street_geometry    Json?
+  status             String?            @db.VarChar(30)
+  location_updates   location_updates[]
+  users              users?             @relation(fields: [id_supervisor], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_supervisor")
+  route_enrollment   route_enrollment[]
+
+  @@index([id_supervisor], map: "idx_route_supervisor")
+}
+
+model route_enrollment {
+  id_route            String    @db.Uuid
+  id_volunteer        String    @db.Uuid
+  enrollment_date     DateTime? @db.Timestamp(6)
+  activity_type       String?   @db.VarChar(50)
+  confirmation_status String?   @db.VarChar(50)
+  route               route     @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_enrollment_route")
+  users               users     @relation(fields: [id_volunteer], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_enrollment_volunteer")
+
+  @@id([id_route, id_volunteer])
+  @@index([id_route], map: "idx_enrollment_route")
+  @@index([id_volunteer], map: "idx_enrollment_volunteer")
+}
+
+model user_addresses {
+  id_address   String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_user      String @db.Uuid
+  alias        String @db.VarChar(50)
+  full_address String @db.VarChar(255)
+  users        users  @relation(fields: [id_user], references: [id_user], onDelete: Cascade, onUpdate: NoAction, map: "fk_address_user")
+}
+
+model users {
+  id_user            String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  rut                String?              @db.VarChar(12)
+  email              String               @unique @db.VarChar(100)
+  password           String               @db.VarChar(255)
+  full_name          String?              @db.VarChar(100)
+  phone_number       String?              @db.VarChar(20)
+  role               String               @db.VarChar(50)
+  account_status     String?              @db.VarChar(20)
+  admin_observations String?
+  token_version      Int                  @default(1)
+  id_organization    String?              @db.Uuid
+  emergency_contacts emergency_contacts[]
+  location_updates   location_updates[]
+  route              route[]
+  route_enrollment   route_enrollment[]
+  user_addresses     user_addresses[]
+  organization       organization?        @relation(fields: [id_organization], references: [id_organization], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_organization")
+
+  @@index([id_organization], map: "idx_users_organization")
+}

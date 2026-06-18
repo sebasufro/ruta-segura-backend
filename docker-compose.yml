@@ -38,6 +38,7 @@ services:
       PG_DB: ${PG_DB}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
+      DATABASE_URL: ${DATABASE_URL}
     
     depends_on:
       db:
