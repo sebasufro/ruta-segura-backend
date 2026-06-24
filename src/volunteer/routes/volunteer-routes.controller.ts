@@ -5,7 +5,14 @@ import { VolunteerRoutesService } from './volunteer-routes.service.js';
 export class VolunteerRoutesController {
   constructor(private readonly volunteerRoutesService: VolunteerRoutesService) {}
 
-  // Contrato: GET /api/{id_volunteer}/routes/{id_route}/details
+  @Get('myroutes')
+  @HttpCode(HttpStatus.OK)
+  async getMyRoutes(
+    @Param('id_volunteer', ParseUUIDPipe) id_volunteer: string,
+  ) {
+    return this.volunteerRoutesService.findMyRoutes(id_volunteer);
+  }
+
   @Get(':id_route/details')
   @HttpCode(HttpStatus.OK)
   async getRouteDetails(
