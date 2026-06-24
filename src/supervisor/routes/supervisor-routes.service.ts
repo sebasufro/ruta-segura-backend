@@ -1,17 +1,19 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Route } from '../../volunteer/routes/entities/route.entity.js';
 import { User } from '../../auth/entities/user.entity.js';
 
 @Injectable()
 export class SupervisorRoutesService {
-  constructor(
-    @InjectRepository(Route)
-    private readonly routeRepository: Repository<Route>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+constructor(
+  private readonly dataSource: DataSource,
+) {
+  this.routeRepository = dataSource.getRepository(Route);
+  this.userRepository = dataSource.getRepository(User);
+}
+
+private readonly routeRepository: Repository<Route>;
+private readonly userRepository: Repository<User>;
 
   async findCreatedRoutes(id_supervisor: string) {
     try {

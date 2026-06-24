@@ -1,14 +1,21 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Route } from '../../../auth/entities/route.entity.js';
+import { DataSource, Repository } from 'typeorm';
+import { Route } from './entities/route.entity';
 
 @Injectable()
 export class VolunteerRoutesService {
-  constructor(
-    @InjectRepository(Route)
-    private readonly routeRepository: Repository<Route>,
-  ) {}
+ constructor(
+  private readonly dataSource: DataSource,
+) {
+  this.routeRepository = dataSource.getRepository(Route);
+  this.enrollmentRepository = dataSource.getRepository(RouteEnrollment);
+  this.userRepository = dataSource.getRepository(User);
+}
+
+private readonly routeRepository: Repository<Route>;
+private readonly enrollmentRepository: Repository<RouteEnrollment>;
+private readonly userRepository: Repository<User>;
 
   async findRouteById(id_route: string) {
     try {
