@@ -14,7 +14,7 @@ services:
       - "${PG_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./ruta_segura_db.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test:
         ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DB}"]
