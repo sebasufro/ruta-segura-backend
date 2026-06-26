@@ -1,150 +1,113 @@
-import { Injectable, ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
-import { CreateUserDto } from './dto/create-user.dto.js';
-import { LoginDto } from './dto/login.dto.js';
-import { UpdateProfileDto } from './dto/update-profile.dto.js';
-import { User } from './entities/user.entity.js';
+import * as bcrypt from 'bcrypt';
+import { LoginDto } from './dto/login.dto';
+import { SignInDto } from './dto/sign-in.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-    private readonly jwtService: JwtService,
+    private prisma: PrismaService,
+    private jwtService: JwtService,
   ) {}
 
-  async register(createUserDto: CreateUserDto) {
-    const existingUser = await this.userRepository.findOne({ where: { email: createUserDto.email } });
-    if (existingUser) {
-      throw new ConflictException('El correo electrónico ya se encuentra registrado en el sistema');
-    }
+  async signIn(signInDto: SignInDto) {
+    const { email, password, rut, role, full_name, phone_number, address, emergency_contact, organization, id_legal_person, certificate } = signInDto;
 
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-
-    const newUser = this.userRepository.create({
-      rut: createUserDto.rut,
-      email: createUserDto.email,
-      password: hashedPassword,
-      full_name: createUserDto.full_name,
-      phone_number: createUserDto.phone_number,
-      role: createUserDto.role,
-      account_status: createUserDto.role === 'SUPERVISOR' ? 'pendiente' : 'activo',
-      emergency_contacts: [
-        {
-          contact_name: createUserDto.emergency_contact.contact_name,
-          contact_number: createUserDto.emergency_contact.contact_number,
-        }
-      ],
-      addresses: [
-        {
-          alias: 'Principal',
-          full_address: createUserDto.address,
-        }
-      ]
+    const existingUser = await this.prisma.users.findFirst({
+      where: {
+        OR: [{ email }, { rut }],
+      },
     });
 
-    const savedUser = await this.userRepository.save(newUser);
+    if (existingUser) {
+      throw new ConflictException({
+        status: 'error',
+        code: 'USER_ALREADY_EXISTS',
+        message: 'El correo electrónico o el RUT ya se encuentran registrados en el sistema',
+        target: existingUser.email === email ? 'correo_electronico' : 'rut'
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    let createdOrgId: string | null = null;
+
+    if (organization) {
+      const org = await this.prisma.organization.create({
+        data: {
+          name: organization,
+          id_legal_person,
+          organization_documents: certificate ? {
+            create: {
+              file_name: certificate.name,
+              content_base64: certificate.content,
+              document_status: 'Pendiente'
+            }
+          } : undefined
+        }
+      });
+      createdOrgId = org.id_organization;
+    }
+
+    const newUser = await this.prisma.users.create({
+      data: {
+        email,
+        password: hashedPassword,
+        rut,
+        role,
+        full_name,
+        phone_number,
+        id_organization: createdOrgId,
+        user_addresses: address ? {
+          create: {
+            alias: 'Principal',
+            full_address: address
+          }
+        } : undefined,
+        emergency_contacts: emergency_contact ? {
+          create: {
+            contact_name: emergency_contact.contact_name,
+            contact_number: emergency_contact.contact_number
+          }
+        } : undefined
+      },
+    });
 
     return {
       status: 'success',
       message: 'Usuario registrado exitosamente',
       data: {
-        id_user: savedUser.id_user,
-        email: savedUser.email,
-        rol: savedUser.role,
-        created_in: new Date().toISOString(),
-      },
+        id_user: newUser.id_user,
+        email: newUser.email,
+        rol: newUser.role,
+        created_in: new Date()
+      }
     };
   }
 
-  async authenticate(loginDto: LoginDto) {
-    // 1. Buscar usuario por email
-    const user = await this.userRepository.findOne({ where: { email: loginDto.email } });
-    if (!user) {
-      throw new UnauthorizedException('Credenciales incorrectas');
-    }
-
-    // 2. Verificar contraseña
-    const passwordMatch = await bcrypt.compare(loginDto.password, user.password);
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Credenciales incorrectas');
-    }
-
-    // 3. Verificar que la cuenta esté activa
-    if (user.account_status !== 'activo') {
-      throw new UnauthorizedException('Tu cuenta está pendiente de aprobación o ha sido desactivada');
-    }
-
-    // 4. Generar JWT con payload mínimo
-    const payload = {
-      sub: user.id_user,
-      email: user.email,
-      role: user.role,
-      token_version: user.token_version,
-    };
-
-    const token = await this.jwtService.signAsync(payload);
-
-    return {
-      status: 'success',
-      message: 'Autenticación exitosa',
-      data: {
-        access_token: token,
-        id_user: user.id_user,
-        full_name: user.full_name,
-        email: user.email,
-        role: user.role,
-      },
-    };
-  }
-
-  async updateProfile(id: string, updateDto: UpdateProfileDto) {
-    // 1. Verificar que el usuario exista
-    const user = await this.userRepository.findOne({
-      where: { id_user: id },
-      relations: { addresses: true, emergency_contacts: true },
-    });
+  async login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+    const user = await this.prisma.users.findUnique({ where: { email } });
 
     if (!user) {
-      throw new NotFoundException('Usuario no encontrado');
+      throw new UnauthorizedException({ error: 'correo o contraseña incorrectos.' });
     }
 
-    // 2. Actualizar campos simples si vienen en el DTO
-    if (updateDto.phone_number) {
-      user.phone_number = updateDto.phone_number;
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException({ error: 'correo o contraseña incorrectos.' });
     }
 
-    if (updateDto.direction) {
-      // Actualiza la primera dirección (la principal)
-      if (user.addresses && user.addresses.length > 0) {
-        user.addresses[0].full_address = updateDto.direction;
-      }
-    }
-
-    if (updateDto.emergency_contact) {
-      if (user.emergency_contacts && user.emergency_contacts.length > 0) {
-        if (updateDto.emergency_contact.contact_name) {
-          user.emergency_contacts[0].contact_name = updateDto.emergency_contact.contact_name;
-        }
-        if (updateDto.emergency_contact.phone_number) {
-          user.emergency_contacts[0].contact_number = updateDto.emergency_contact.phone_number;
-        }
-      }
-    }
-
-    // 3. Persistir cambios (cascade guarda relaciones también)
-    await this.userRepository.save(user);
+    const payload = { email: user.email, id_user: user.id_user, role: user.role };
+    const token = this.jwtService.sign(payload);
 
     return {
-      status: 'success',
-      message: 'Perfil actualizado correctamente',
-      data: {
-        id_user: user.id_user,
-        phone_number: user.phone_number,
-      },
+      token,
+      rol: user.role,
+      id_user: user.id_user,
     };
   }
 }

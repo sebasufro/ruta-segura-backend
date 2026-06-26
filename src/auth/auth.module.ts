@@ -1,20 +1,20 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthService } from './auth.service.js';
-import { AuthController } from './auth.controller.js';
-import { AuthGuard } from './auth.guard.js';
-import { User } from './entities/user.entity.js';
-import { UserAddress } from './entities/user-address.entity.js';
-import { EmergencyContact } from './entities/emergency-contact.entity.js';
+import { ConfigService } from '@nestjs/config';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserAddress, EmergencyContact]),
-    JwtModule.register({
-      global: true, // disponible en todo el proyecto sin reimportar
-      secret: process.env.JWT_SECRET ?? 'ruta_segura_secret',
-      signOptions: { expiresIn: '8h' },
+     PassportModule,
+    JwtModule.registerAsync({
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],

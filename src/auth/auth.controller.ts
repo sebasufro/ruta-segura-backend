@@ -2,7 +2,7 @@ import { Controller, Post, Body, Patch, Param, HttpCode, HttpStatus } from '@nes
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import { SignInDto } from './dto/sign-in.dto';
 
 @Controller('api')
 export class AuthController {
@@ -10,19 +10,14 @@ export class AuthController {
 
   @Post('signIn')
   @HttpCode(HttpStatus.CREATED)
-  async signIn(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+  signIn(@Body() signInDto: SignInDto) {
+    return this.authService.signIn(signInDto);
   }
 
-  @Post('v1/login')
+  @Post(['login', 'v1/login'])
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
     return this.authService.authenticate(loginDto);
   }
 
-  @Patch('v1/:id/profile/edit')
-  @HttpCode(HttpStatus.OK)
-  async editProfile(@Param('id') id: string, @Body() updateDto: UpdateProfileDto) {
-    return this.authService.updateProfile(id, updateDto);
-  }
 }
