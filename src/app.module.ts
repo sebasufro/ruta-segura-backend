@@ -20,6 +20,7 @@ import { DeleteEnrolledVolunteerController } from './supervisor/delete_enrolled_
 import { DeleteEnrolledVolunteerService } from './supervisor/delete_enrolled_volunteer.service';
 import { GetEnrolledVolunteerDetailsController } from './supervisor/get_enrolled_volunteer_details.controller';
 import { GetEnrolledVolunteerDetailsService } from './supervisor/get_enrolled_volunteer_details.service';
+import { LocationModule } from './volunteer/location/location.module';
 
 @Module({
   imports: [
@@ -29,7 +30,9 @@ import { GetEnrolledVolunteerDetailsService } from './supervisor/get_enrolled_vo
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     RouteModule,
-    VolunteerRoutesModule,],
+    VolunteerRoutesModule,
+    LocationModule
+  ],
   controllers: [AppController, DeleteEnrolledRoutesController, EnrollNewRoutesController, ListEnrolledVolunteersController, GetEmergencyNumberController, DeleteEnrolledVolunteerController, GetEnrolledVolunteerDetailsController],
   providers: [AppService, DeleteEnrolledRoutesService, EnrollNewRoutesService, ListEnrolledVolunteersService, GetEmergencyNumberService, DeleteEnrolledVolunteerService, GetEnrolledVolunteerDetailsService],
 })

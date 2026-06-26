@@ -11,7 +11,7 @@ export class EnrollmentRequestDTO {
 
   @IsString()
   @IsNotEmpty()
-  activity_type: string;
+  activity_type?: string;
 
   @IsString()
   @IsNotEmpty()
