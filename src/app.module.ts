@@ -3,6 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
+import { RouteModule } from './supervisor/routes/routes.module';
+import { UsersModule } from './admin/users/users.module';
+import { DocumentsModule } from './admin/documents/documents.module';
+import { AuthModule } from './auth/auth.module';
+import { VolunteerRoutesModule } from './volunteer/routes/volunteer-routes.module';
 import { DeleteEnrolledRoutesController } from './volunteer/enroll/delete_enrolled_routes.controller';
 import { DeleteEnrolledRoutesService } from './volunteer/enroll/delete_enrolled_routes.service';
 import { EnrollNewRoutesController } from './volunteer/enroll/enroll_new_routes.controller';
@@ -17,8 +22,15 @@ import { GetEnrolledVolunteerDetailsController } from './supervisor/get_enrolled
 import { GetEnrolledVolunteerDetailsService } from './supervisor/get_enrolled_volunteer_details.service';
 
 @Module({
-  imports: [ConfigModule.forRoot(), PrismaModule],
+  imports: [
+    AuthModule,
+    UsersModule,
+    DocumentsModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    RouteModule,
+    VolunteerRoutesModule,],
   controllers: [AppController, DeleteEnrolledRoutesController, EnrollNewRoutesController, ListEnrolledVolunteersController, GetEmergencyNumberController, DeleteEnrolledVolunteerController, GetEnrolledVolunteerDetailsController],
   providers: [AppService, DeleteEnrolledRoutesService, EnrollNewRoutesService, ListEnrolledVolunteersService, GetEmergencyNumberService, DeleteEnrolledVolunteerService, GetEnrolledVolunteerDetailsService],
 })
-export class AppModule {}
+export class AppModule { }
