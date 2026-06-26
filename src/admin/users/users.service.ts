@@ -5,14 +5,13 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'crypto';
-import { promisify } from 'util';
+import { timingSafeEqual } from 'crypto';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DashboardQueryDto } from './dto/date-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-const scrypt = promisify(scryptCallback);
 const ALLOWED_ROLES = new Set(['ADMIN', 'SUPERVISOR', 'VOLUNTEER']);
 
 @Injectable()
@@ -272,10 +271,6 @@ export class UsersService {
         },
         orderBy: { full_name: 'asc' },
       });
-
-      if (users.length === 0) {
-        throw new NotFoundException({ error: 'No se encontraron registros de usuarios.' });
-      }
 
       return {
         status: 'exitoso',
@@ -666,10 +661,6 @@ export class UsersService {
   }
 
   private async hashPassword(password: string) {
-    const salt = randomBytes(16).toString('hex');
-    const derivedKey = (await scrypt(password, salt, 64)) as Buffer;
-    const hash = createHash('sha256').update(derivedKey).digest('hex');
-
-    return `scrypt:${salt}:${hash}`;
+    return bcrypt.hash(password, 10);
   }
 }
