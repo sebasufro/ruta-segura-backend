@@ -3,44 +3,36 @@ import {
   Controller,
   Delete,
   Get,
-  Headers,
   Param,
   Patch,
   Post,
   Query,
-  UnauthorizedException,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../auth/roles.guard';
+import { Roles } from '../../auth/roles.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DashboardQueryDto } from './dto/date-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 
 @Controller('api')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post(':id_admin/user/create')
-  @UseInterceptors(
-    FileInterceptor('certificado', {
-      limits: { fileSize: 5 * 1024 * 1024 },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('certificado', { limits: { fileSize: 5 * 1024 * 1024 } }))
   createUser(
     @Param('id_admin') idAdmin: string,
     @Body() createUserDto: CreateUserDto,
     @UploadedFile() certificado?: any,
-    @Headers('authorization') authorization?: string,
   ) {
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      throw new UnauthorizedException({
-        status: 'error',
-        message: 'Acceso restringido a administradores.',
-      });
-    }
-
     return this.usersService.createUser(idAdmin, createUserDto, certificado);
   }
 
@@ -49,9 +41,7 @@ export class UsersController {
     @Param('id_admin') idAdmin: string,
     @Param('id_target') idTarget: string,
     @Body() updateUserDto: UpdateUserDto,
-    @Headers('authorization') authorization?: string,
   ) {
-    this.validateBearer(authorization, 'No autorizado. Se requiere nivel de acceso administrativo.');
     return this.usersService.updateUser(idAdmin, idTarget, updateUserDto);
   }
 
@@ -59,12 +49,7 @@ export class UsersController {
   getUserDetails(
     @Param('id_admin') idAdmin: string,
     @Param('id_target') idTarget: string,
-    @Headers('authorization') authorization?: string,
   ) {
-    this.validateBearer(
-      authorization,
-      'No autorizado. Se requiere nivel de acceso de Administrador.',
-    );
     return this.usersService.getUserDetails(idAdmin, idTarget);
   }
 
@@ -72,21 +57,12 @@ export class UsersController {
   deleteUser(
     @Param('id_admin') idAdmin: string,
     @Param('id_target') idTarget: string,
-    @Headers('authorization') authorization?: string,
   ) {
-    this.validateBearer(authorization, 'Acceso denegado. Se requieren permisos de administrador.');
     return this.usersService.deleteUser(idAdmin, idTarget);
   }
 
   @Get(':id_admin/users/all')
-  getAllUsers(
-    @Param('id_admin') idAdmin: string,
-    @Headers('authorization') authorization?: string,
-  ) {
-    this.validateBearer(
-      authorization,
-      'No autorizado. El usuario no tiene permisos de administrador.',
-    );
+  getAllUsers(@Param('id_admin') idAdmin: string) {
     return this.usersService.getAllUsers(idAdmin);
   }
 
@@ -94,9 +70,7 @@ export class UsersController {
   getSosAlertsByDate(
     @Param('id_admin') idAdmin: string,
     @Query() query: DashboardQueryDto,
-    @Headers('authorization') authorization?: string,
   ) {
-    this.validateBearer(authorization, 'No autorizado. Se requiere nivel de acceso administrativo.');
     return this.usersService.getSosAlertsHistory(idAdmin, query);
   }
 
@@ -104,18 +78,7 @@ export class UsersController {
   getCompletedRoutesByDate(
     @Param('id_admin') idAdmin: string,
     @Query() query: DashboardQueryDto,
-    @Headers('authorization') authorization?: string,
   ) {
-    this.validateBearer(authorization, 'No autorizado. Se requiere nivel de acceso administrativo.');
     return this.usersService.getCompletedRoutesHistory(idAdmin, query);
-  }
-
-  private validateBearer(authorization: string | undefined, message: string) {
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      throw new UnauthorizedException({
-        status: 'error',
-        message,
-      });
-    }
   }
 }

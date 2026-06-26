@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { timingSafeEqual } from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DashboardQueryDto } from './dto/date-query.dto';
@@ -72,6 +74,12 @@ export class UsersService {
         id_document: result.document?.id_document ?? null,
       };
     } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException({
+          status: 'error',
+          message: 'El correo electrónico o RUT ya está registrado.',
+        });
+      }
       throw new InternalServerErrorException({
         status: 'error',
         message: 'Error interno al registrar el usuario.',
@@ -413,17 +421,22 @@ export class UsersService {
   }
 
   private async validateAdmin(idAdmin: string, message: string) {
+    if (!this.isValidUuid(idAdmin)) {
+      throw new UnauthorizedException({ status: 'error', message });
+    }
+
     const admin = await this.prisma.users.findUnique({
       where: { id_user: idAdmin },
       select: { role: true },
     });
 
     if (!admin || admin.role !== 'ADMIN') {
-      throw new UnauthorizedException({
-        status: 'error',
-        message,
-      });
+      throw new UnauthorizedException({ status: 'error', message });
     }
+  }
+
+  private isValidUuid(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
   private validateCreateUserDto(createUserDto: CreateUserDto, certificadoFile?: any) {
