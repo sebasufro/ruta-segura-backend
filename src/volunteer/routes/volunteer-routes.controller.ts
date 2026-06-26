@@ -14,4 +14,9 @@ export class VolunteerRoutesController {
   getAvailableRoutes(@Request() req) {
     return this.volunteerRoutesService.getAvailableRoutes(req.user.id_user);
   }
+
+  @Get('my-enrollments')
+  getMyEnrollments(@Request() req) {
+    return this.volunteerRoutesService.getMyEnrollments(req.user.id_user);
+  }
 }

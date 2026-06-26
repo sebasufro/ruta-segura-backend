@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -52,6 +52,59 @@ export class VolunteerRoutesService {
               organization: r.users.organization?.name ?? null,
             }
           : null,
+      })),
+    };
+  }
+
+  async getMyEnrollments(volunteerId: string) {
+    const enrollments = await this.prisma.route_enrollment.findMany({
+      where: { id_volunteer: volunteerId },
+      include: {
+        route: {
+          select: {
+            id_route: true,
+            route_name: true,
+            description: true,
+            status: true,
+            starting_datetime: true,
+            ending_datetime: true,
+            transport_type: true,
+            distance_meters: true,
+            users: {
+              select: {
+                full_name: true,
+                organization: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { enrollment_date: 'desc' },
+    });
+
+    return {
+      status: 'success',
+      total_results: enrollments.length,
+      enrollments: enrollments.map((e) => ({
+        id_route: e.id_route,
+        enrollment_date: e.enrollment_date,
+        confirmation_status: e.confirmation_status,
+        activity_type: e.activity_type,
+        route: {
+          route_name: e.route.route_name,
+          description: e.route.description,
+          status: e.route.status,
+          starting_datetime: e.route.starting_datetime,
+          ending_datetime: e.route.ending_datetime,
+          transport_type: e.route.transport_type,
+          distance_meters: e.route.distance_meters,
+          supervisor: e.route.users
+            ? {
+                full_name: e.route.users.full_name,
+                organization: e.route.users.organization?.name ?? null,
+              }
+            : null,
+        },
       })),
     };
   }
