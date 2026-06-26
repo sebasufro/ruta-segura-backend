@@ -31,7 +31,7 @@ export class EnrollNewRoutesService {
       }
 
       // Check if route is active or available
-      if (route.status !== 'available' && route.status !== 'active') {
+      if (route.status !== 'PUBLISHED' && route.status !== 'ACTIVE') {
         throw new BadRequestException('La ruta no está disponible para inscripción.');
       }
 
@@ -70,7 +70,7 @@ export class EnrollNewRoutesService {
           id_volunteer: idVolunteer,
           enrollment_date: enrollmentDate,
           activity_type: enrollmentData.activity_type || 'Ruta Social',
-          confirmation_status: enrollmentData.confirmation_status || 'Pendiente de inicio',
+          confirmation_status: enrollmentData.confirmation_status || 'PENDING',
         },
       });
 
