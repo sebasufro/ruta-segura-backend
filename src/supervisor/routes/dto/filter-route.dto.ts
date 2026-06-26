@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsDateString } from 'class-validator';
 
 export class FilterRouteDto {
   @IsOptional()
@@ -8,10 +8,6 @@ export class FilterRouteDto {
   @IsOptional()
   @IsString()
   transport_type?: string;
-
-  @IsOptional()
-  @IsUUID()
-  id_supervisor?: string;
 
   @IsOptional()
   @IsString()

@@ -1,10 +1,6 @@
-import { IsString, IsOptional, IsNumber, IsDateString, IsArray, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsDateString, IsArray } from 'class-validator';
 
 export class CreateRouteDto {
-  @IsOptional()
-  @IsUUID()
-  id_supervisor?: string;
-
   @IsString()
   route_name: string;
 
