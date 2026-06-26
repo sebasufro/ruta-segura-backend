@@ -7,19 +7,14 @@ import { RouteModule } from './supervisor/routes/routes.module';
 import { UsersModule } from './admin/users/users.module';
 import { DocumentsModule } from './admin/documents/documents.module';
 import { AuthModule } from './auth/auth.module';
+import { ProfileModule } from './profile/profile.module';
 import { VolunteerRoutesModule } from './volunteer/routes/volunteer-routes.module';
-import { DeleteEnrolledRoutesController } from './volunteer/enroll/delete_enrolled_routes.controller';
-import { DeleteEnrolledRoutesService } from './volunteer/enroll/delete_enrolled_routes.service';
-import { EnrollNewRoutesController } from './volunteer/enroll/enroll_new_routes.controller';
-import { EnrollNewRoutesService } from './volunteer/enroll/enroll_new_routes.service';
-import { ListEnrolledVolunteersController } from './supervisor/list_enrolled_volunteers.controller';
-import { ListEnrolledVolunteersService } from './supervisor/list_enrolled_volunteers.service';
-import { GetEmergencyNumberController } from './volunteer/get_emergency_number.controller';
-import { GetEmergencyNumberService } from './volunteer/get_emergency_number.service';
-import { DeleteEnrolledVolunteerController } from './supervisor/delete_enrolled_volunteer.controller';
-import { DeleteEnrolledVolunteerService } from './supervisor/delete_enrolled_volunteer.service';
-import { GetEnrolledVolunteerDetailsController } from './supervisor/get_enrolled_volunteer_details.controller';
-import { GetEnrolledVolunteerDetailsService } from './supervisor/get_enrolled_volunteer_details.service';
+import { DeleteEnrolledRoutesModule } from './volunteer/enroll/delete_enrolled_routes.module';
+import { EnrollNewRoutesModule } from './volunteer/enroll/enroll_new_routes.module';
+import { ListEnrolledVolunteersModule } from './supervisor/list_enrolled_volunteers.module';
+import { GetEmergencyNumberModule } from './volunteer/get_emergency_number.module';
+import { DeleteEnrolledVolunteerModule } from './supervisor/delete_enrolled_volunteer.module';
+import { GetEnrolledVolunteerDetailsModule } from './supervisor/get_enrolled_volunteer_details.module';
 import { LocationModule } from './volunteer/location/location.module';
 
 @Module({
@@ -31,9 +26,16 @@ import { LocationModule } from './volunteer/location/location.module';
     PrismaModule,
     RouteModule,
     VolunteerRoutesModule,
-    LocationModule
+    LocationModule,
+    ProfileModule,
+    EnrollNewRoutesModule,
+    DeleteEnrolledRoutesModule,
+    ListEnrolledVolunteersModule,
+    GetEmergencyNumberModule,
+    DeleteEnrolledVolunteerModule,
+    GetEnrolledVolunteerDetailsModule
   ],
-  controllers: [AppController, DeleteEnrolledRoutesController, EnrollNewRoutesController, ListEnrolledVolunteersController, GetEmergencyNumberController, DeleteEnrolledVolunteerController, GetEnrolledVolunteerDetailsController],
-  providers: [AppService, DeleteEnrolledRoutesService, EnrollNewRoutesService, ListEnrolledVolunteersService, GetEmergencyNumberService, DeleteEnrolledVolunteerService, GetEnrolledVolunteerDetailsService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule { }
