@@ -8,9 +8,6 @@ import { UsersModule } from './admin/users/users.module';
 import { DocumentsModule } from './admin/documents/documents.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, DocumentsModule],
-
-@Module({
   imports: [
     UsersModule,
     DocumentsModule,
@@ -21,4 +18,4 @@ import { DocumentsModule } from './admin/documents/documents.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
