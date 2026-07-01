@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-@Controller('api/volunteer/emergencyContact')
+@Controller('api/volunteer/emergency-contact')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('VOLUNTEER')
 export class EmergencyNumberController {
