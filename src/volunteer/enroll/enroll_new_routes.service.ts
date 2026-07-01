@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { EnrollmentRequestDTO } from './DTO/enrollment_request.dto';
+import { EnrollmentRequestDTO } from './dto/enrollment_request.dto';
 
 export interface EnrollmentResponseDTO {
   message: string;

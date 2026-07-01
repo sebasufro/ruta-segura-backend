@@ -1,6 +1,6 @@
 import { Controller, Post, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { EnrollNewRoutesService, EnrollmentResponseDTO } from './enroll_new_routes.service';
-import { EnrollmentRequestDTO } from './DTO/enrollment_request.dto';
+import { EnrollmentRequestDTO } from './dto/enrollment_request.dto';
 
 @Controller('api')
 export class EnrollNewRoutesController {
