@@ -1,34 +1,36 @@
-# Build stage
-FROM node:20-alpine AS builder
+# ── Stage 1: build ──────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy source code
 COPY . .
 
-# Build the application
+# Generate Prisma client before building
+RUN npx prisma generate
+
 RUN npm run build
 
-# Runtime stage
-FROM node:20-alpine
+# ── Stage 2: production ──────────────────────────────────────────────────────
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Copy prisma schema and regenerate client in production
+COPY --from=builder /app/prisma ./prisma
+RUN npx prisma generate
 
-# Copy built application from builder
+# Copy compiled output and node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 
-EXPOSE 8080
+ENV NODE_ENV=production
 
-CMD ["node", "dist/main"]
+EXPOSE 3000
+
+CMD ["node", "dist/src/main"]
