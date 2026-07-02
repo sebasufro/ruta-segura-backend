@@ -18,16 +18,8 @@ FROM node:22-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --omit=dev
-
-# Copy prisma schema and regenerate client in production
-COPY --from=builder /app/prisma ./prisma
-RUN npx prisma generate
-
-# Copy compiled output and node_modules
-COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
 
