@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { timingSafeEqual } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DashboardQueryDto } from './dto/date-query.dto';
@@ -74,11 +73,8 @@ export class UsersService {
         id_document: result.document?.id_document ?? null,
       };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException({
-          status: 'error',
-          message: 'El correo electrónico o RUT ya está registrado.',
-        });
+      if (error instanceof ConflictException) {
+        throw error;
       }
       throw new InternalServerErrorException({
         status: 'error',

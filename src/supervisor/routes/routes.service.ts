@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { FilterRouteDto } from './dto/filter-route.dto';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '../../generated/client';
 
 @Injectable()
 export class RouteService {
@@ -12,7 +12,7 @@ export class RouteService {
   create(supervisorId: string, dto: CreateRouteDto) {
     const { starting_datetime, ending_datetime, ...rest } = dto;
 
-    const data: Prisma.routeCreateInput = {
+    const data = {
       ...rest,
       starting_datetime: starting_datetime ? new Date(starting_datetime) : undefined,
       ending_datetime: ending_datetime ? new Date(ending_datetime) : undefined,
@@ -28,7 +28,7 @@ export class RouteService {
       status: filters.status,
       transport_type: filters.transport_type,
       route_name: filters.route_name
-        ? { contains: filters.route_name, mode: 'insensitive' }
+        ? { contains: filters.route_name, mode: 'insensitive' as const }
         : undefined,
       starting_datetime:
         filters.starting_date_from || filters.starting_date_to
@@ -56,7 +56,7 @@ export class RouteService {
 
     const { starting_datetime, ending_datetime, ...rest } = dto;
 
-    const data: Prisma.routeUpdateInput = {
+    const data = {
       ...rest,
       starting_datetime: starting_datetime ? new Date(starting_datetime) : undefined,
       ending_datetime: ending_datetime ? new Date(ending_datetime) : undefined,
