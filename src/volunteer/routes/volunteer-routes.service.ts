@@ -72,6 +72,8 @@ export class VolunteerRoutesService {
             ending_datetime: true,
             transport_type: true,
             distance_meters: true,
+            street_geometry: true,
+            base_points: true,
             users: {
               select: {
                 full_name: true,
@@ -100,6 +102,8 @@ export class VolunteerRoutesService {
           ending_datetime: e.route.ending_datetime,
           transport_type: e.route.transport_type,
           distance_meters: e.route.distance_meters,
+          street_geometry: e.route.street_geometry,
+          base_points: e.route.base_points,
           supervisor: e.route.users
             ? {
                 full_name: e.route.users.full_name,
