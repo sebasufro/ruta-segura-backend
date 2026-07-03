@@ -55,6 +55,39 @@ export class LocationService {
     };
   }
 
+  async getRouteLocations(volunteerId: string, routeId: string) {
+    await this.validateEnrollment(volunteerId, routeId);
+
+    const volunteers = await this.prisma.route_enrollment.findMany({
+      where: { id_route: routeId },
+      include: {
+        users: { select: { id_user: true, full_name: true } },
+      },
+    });
+
+    const locations = await Promise.all(
+      volunteers.map(async (v) => {
+        const last = await this.prisma.location_updates.findFirst({
+          where: { id_user: v.id_volunteer, id_route: routeId },
+          orderBy: { timestamp: 'desc' },
+        });
+        return {
+          id_user: v.id_volunteer,
+          full_name: v.users.full_name,
+          latitude: last ? Number(last.latitude) : null,
+          longitude: last ? Number(last.longitude) : null,
+          sos_active: last ? last.sos_active === 1 : false,
+          last_update: last?.timestamp ?? null,
+        };
+      }),
+    );
+
+    return {
+      status: 'success',
+      locations: locations.filter((l) => l.latitude !== null),
+    };
+  }
+
   private async validateEnrollment(volunteerId: string, routeId: string) {
     const route = await this.prisma.route.findUnique({
       where: { id_route: routeId },

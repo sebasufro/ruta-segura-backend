@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
@@ -11,6 +11,11 @@ import { LocationService } from './location.service';
 @Roles('VOLUNTEER')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
+
+  @Get(':routeId')
+  getRouteLocations(@Request() req, @Param('routeId') routeId: string) {
+    return this.locationService.getRouteLocations(req.user.id_user, routeId);
+  }
 
   @Post()
   sendLocation(@Request() req, @Body() dto: SendLocationDto) {
