@@ -44,6 +44,8 @@ export class VolunteerRoutesService {
         transport_type: r.transport_type,
         distance_meters: r.distance_meters,
         min_volunteers: r.min_volunteers,
+        street_geometry: r.street_geometry,
+        base_points: r.base_points,
         spots_remaining:
           r.max_capacity !== null ? r.max_capacity - r._count.route_enrollment : null,
         supervisor: r.users
