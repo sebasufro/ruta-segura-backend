@@ -47,7 +47,7 @@ export class UsersService {
             role: createUserDto.rol.trim().toUpperCase(),
             full_name: createUserDto.nombre_completo.trim(),
             phone_number: createUserDto.telefono?.trim(),
-            account_status: 'ACTIVE',
+            account_status: shouldCreateDocument ? 'Pendiente' : 'ACTIVE',
             id_organization: organization.id_organization,
           },
         });
@@ -297,6 +297,74 @@ export class UsersService {
 
       throw new InternalServerErrorException({
         error: 'Error interno del servidor al procesar la lista.',
+      });
+    }
+  }
+
+  async getPendingVerifications(idAdmin: string) {
+    await this.validateAdmin(idAdmin, 'Acceso restringido a administradores.');
+
+    try {
+      const documents = await this.prisma.organization_documents.findMany({
+        where: {
+          document_status: {
+            in: ['PENDING', 'Pending', 'pending', 'Pendiente', 'pendiente'],
+          },
+        },
+        include: {
+          organization: {
+            include: {
+              users: {
+                where: {
+                  role: 'SUPERVISOR',
+                },
+                select: {
+                  id_user: true,
+                  full_name: true,
+                  email: true,
+                  rut: true,
+                  phone_number: true,
+                  role: true,
+                  account_status: true,
+                },
+                orderBy: { full_name: 'asc' },
+              },
+            },
+          },
+        },
+        orderBy: { file_name: 'asc' },
+      });
+
+      const verifications = documents
+        .filter((document) => document.organization.users.length > 0)
+        .map((document) => {
+          const supervisor = document.organization.users[0];
+
+          return {
+            supervisor,
+            organization: {
+              id_organization: document.organization.id_organization,
+              name: document.organization.name,
+            },
+            documents: [
+              {
+                id_document: document.id_document,
+                file_name: document.file_name,
+                document_status: document.document_status,
+              },
+            ],
+          };
+        });
+
+      return {
+        status: 'success',
+        total_results: verifications.length,
+        verifications,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException({
+        status: 'error',
+        message: 'Error interno al listar verificaciones pendientes.',
       });
     }
   }

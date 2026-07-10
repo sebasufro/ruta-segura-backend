@@ -66,6 +66,11 @@ export class UsersController {
     return this.usersService.getAllUsers(idAdmin);
   }
 
+  @Get(':id_admin/verifications/pending')
+  getPendingVerifications(@Param('id_admin') idAdmin: string) {
+    return this.usersService.getPendingVerifications(idAdmin);
+  }
+
   @Get(':id_admin/dashboard/sos-alerts')
   getSosAlertsByDate(
     @Param('id_admin') idAdmin: string,
