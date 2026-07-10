@@ -83,29 +83,78 @@ export class DocumentsService {
   ) {
     await this.validateAdmin(idAdmin, 'No autorizado. Acceso restringido a administradores.');
 
+    const documentStatus = validateDocumentDto.document_status.trim().toUpperCase();
+    if (!['APPROVED', 'REJECTED'].includes(documentStatus)) {
+      throw new BadRequestException({
+        error: 'El estado del documento debe ser APPROVED o REJECTED.',
+      });
+    }
+
+    const verificationNotes = validateDocumentDto.verification_notes.trim();
+    if (documentStatus === 'REJECTED' && verificationNotes.length === 0) {
+      throw new BadRequestException({
+        error: 'Las notas de verificación son obligatorias para rechazar un documento.',
+      });
+    }
+
     const approvalDate = this.parseApprovalDate(validateDocumentDto.approval_date);
     const document = await this.prisma.organization_documents.findUnique({
       where: { id_document: idDocument },
+      include: {
+        organization: {
+          include: {
+            users: {
+              where: { role: 'SUPERVISOR' },
+              select: { id_user: true },
+            },
+          },
+        },
+      },
     });
 
     if (!document) {
       throw new NotFoundException({ error: 'Documento no encontrado.' });
     }
 
+    if (document.organization.users.length === 0) {
+      throw new BadRequestException({
+        error: 'No existe un supervisor asociado a la organización del documento.',
+      });
+    }
+
+    const supervisorStatus = documentStatus === 'APPROVED' ? 'ACTIVE' : 'BLOCKED';
+
     try {
-      await this.prisma.organization_documents.update({
-        where: { id_document: idDocument },
-        data: {
-          document_status: validateDocumentDto.document_status,
-          verification_notes: validateDocumentDto.verification_notes,
-          approval_date: approvalDate,
-        },
+      const result = await this.prisma.$transaction(async (tx) => {
+        const updatedDocument = await tx.organization_documents.update({
+          where: { id_document: idDocument },
+          data: {
+            document_status: documentStatus,
+            verification_notes: verificationNotes,
+            approval_date: approvalDate,
+          },
+        });
+
+        const updatedSupervisors = await tx.users.updateMany({
+          where: {
+            id_organization: document.id_organization,
+            role: 'SUPERVISOR',
+          },
+          data: {
+            account_status: supervisorStatus,
+          },
+        });
+
+        return { updatedDocument, updatedSupervisors };
       });
 
       return {
         status: 'exitoso',
         message: 'Documento verificado correctamente',
         id_document: idDocument,
+        document_status: result.updatedDocument.document_status,
+        supervisor_status: supervisorStatus,
+        supervisors_updated: result.updatedSupervisors.count,
       };
     } catch (error) {
       throw new InternalServerErrorException({
